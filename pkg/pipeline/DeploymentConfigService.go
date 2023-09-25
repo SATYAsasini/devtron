@@ -5,6 +5,7 @@ import (
 	"github.com/devtron-labs/devtron/internal/sql/repository"
 	"github.com/devtron-labs/devtron/internal/sql/repository/chartConfig"
 	"github.com/devtron-labs/devtron/internal/sql/repository/pipelineConfig"
+	"github.com/devtron-labs/devtron/internal/util"
 	chartRepoRepository "github.com/devtron-labs/devtron/pkg/chartRepo/repository"
 	"github.com/devtron-labs/devtron/pkg/pipeline/history"
 	repository2 "github.com/devtron-labs/devtron/pkg/pipeline/history/repository"
@@ -212,9 +213,12 @@ func (impl *DeploymentConfigServiceImpl) GetLatestDeploymentTemplateConfig(pipel
 func (impl *DeploymentConfigServiceImpl) GetLatestPipelineStrategyConfig(pipeline *pipelineConfig.Pipeline) (*history.HistoryDetailDto, error) {
 
 	pipelineStrategy, err := impl.pipelineConfigRepository.GetDefaultStrategyByPipelineId(pipeline.Id)
-	if err != nil {
+	if err != nil && !util.IsErrNoRows(err) {
 		impl.logger.Errorw("error in getting default pipelineStrategy by pipelineId", "err", err, "pipelineId", pipeline.Id)
 		return nil, err
+	}
+	if pipelineStrategy == nil {
+		pipelineStrategy = &chartConfig.PipelineStrategy{}
 	}
 	pipelineStrategyConfig := &history.HistoryDetailDto{
 		Strategy:            string(pipelineStrategy.Strategy),

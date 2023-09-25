@@ -3,6 +3,7 @@ package history
 import (
 	"github.com/devtron-labs/devtron/internal/sql/repository/chartConfig"
 	"github.com/devtron-labs/devtron/internal/sql/repository/pipelineConfig"
+	"github.com/devtron-labs/devtron/internal/util"
 	"github.com/devtron-labs/devtron/pkg/pipeline/history/repository"
 	"github.com/devtron-labs/devtron/pkg/sql"
 	"github.com/devtron-labs/devtron/pkg/user"
@@ -177,9 +178,12 @@ func (impl PipelineStrategyHistoryServiceImpl) GetLatestDeployedHistoryByPipelin
 
 	//checking if history exists for pipelineId and wfrId
 	history, err := impl.pipelineStrategyHistoryRepository.GetHistoryByPipelineIdAndWfrId(pipelineId, wfrId)
-	if err != nil {
+	if err != nil && !util.IsErrNoRows(err) {
 		impl.logger.Errorw("error in checking if history exists for pipelineId and wfrId", "err", err, "pipelineId", pipelineId, "wfrId", wfrId)
 		return nil, err
+	}
+	if history == nil {
+		history = &repository.PipelineStrategyHistory{}
 	}
 	historyDto := &HistoryDetailDto{
 		Strategy: string(history.Strategy),
